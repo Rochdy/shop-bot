@@ -17,3 +17,8 @@ parameters:
 
     # A secret key that's used to generate certain security-related tokens
     secret: ThisTokenIsNotSoSecretChangeIt
+
+    # Facebook App params
+    facebook_app_access_token: ~
+    facebook_app_verify_token: ~
+    get_started_payload: start

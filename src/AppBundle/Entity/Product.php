@@ -2,8 +2,11 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\BotMessageType;
 use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
+use pimax\Messages\MessageButton;
+use pimax\Messages\MessageElement;
 
 /**
  * @ORM\Entity
@@ -95,6 +98,28 @@ class Product
     public function setPrice($price)
     {
         $this->price = $price;
+    }
+
+    /**
+     * @param Customer $customer
+     * @return MessageElement
+     */
+    public function getTemplate(Customer $customer)
+    {
+        return new MessageElement(
+            ucwords($this->getName()),
+            "Price: {$this->getPrice()}",
+            '',
+            [
+                new MessageButton(MessageButton::TYPE_POSTBACK,
+                    BotMessageType::ADD_TO_CART_TEXT,
+                    BotMessageType::convertPayload(BotMessageType::ADD_TO_CART_PAYLOAD, [
+                        'product' => $this->getId(),
+                        'customer' => $customer->getId()
+                        ])
+                )
+            ]
+        );
     }
 
     public function __toString(){

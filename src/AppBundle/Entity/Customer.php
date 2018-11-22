@@ -6,8 +6,9 @@ use Doctrine\Common\Collections\ArrayCollection;
 use Doctrine\ORM\Mapping as ORM;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\CustomerRepository")
  * @ORM\Table(name="customers")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Customer
 {
@@ -105,6 +106,22 @@ class Customer
     public function setCreatedAt($createdAt)
     {
         $this->createdAt = $createdAt;
+    }
+
+    /**
+     * @return ArrayCollection
+     */
+    public function getCart()
+    {
+        return $this->cart;
+    }
+
+    /**
+     * @param ArrayCollection $cart
+     */
+    public function setCart($cart)
+    {
+        $this->cart = $cart;
     }
 
     public function __toString(){

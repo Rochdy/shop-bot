@@ -2,11 +2,15 @@
 
 namespace AppBundle\Entity;
 
+use AppBundle\Constant\BotMessageType;
 use Doctrine\ORM\Mapping as ORM;
+use pimax\Messages\MessageButton;
+use pimax\Messages\MessageElement;
 
 /**
- * @ORM\Entity
+ * @ORM\Entity(repositoryClass="AppBundle\Repository\CartRepository")
  * @ORM\Table(name="carts")
+ * @ORM\HasLifecycleCallbacks()
  */
 class Cart
 {
@@ -135,6 +139,38 @@ class Cart
     public function setCreatedAt($createdAt)
     {
         $this->createdAt = $createdAt;
+    }
+
+    /**
+     * Get message template
+     *
+     * @return MessageElement
+     */
+    public function getTemplate()
+    {
+        return new MessageElement(
+            ucwords($this->getProduct()->getName()),
+            "x{$this->getQuantity()} | Total Price: {$this->getTotalPrice()}",
+            '',
+            [
+                new MessageButton(MessageButton::TYPE_POSTBACK,
+                    BotMessageType::REMOVE_FROM_CART_TEXT,
+                    BotMessageType::convertPayload(BotMessageType::REMOVE_FROM_CART_PAYLOAD, [
+                        'item' => $this->getId()
+                    ])
+                )
+            ]
+        );
+    }
+
+    /**
+     * Calculate total price of the cart item
+     *
+     * @return float|int
+     */
+    private function getTotalPrice()
+    {
+        return $this->getQuantity() * $this->getProduct()->getPrice();
     }
 
     public function __toString(){
