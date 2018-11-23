@@ -12,6 +12,6 @@ use JMS\DiExtraBundle\Annotation\DoctrineListener as DoctrineDI;
  *     priority = 0,
  * )
  */
-class DoctrineStoryListener
+class DoctrineCartListener
 {
 }
