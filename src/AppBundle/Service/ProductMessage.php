@@ -8,16 +8,18 @@ use AppBundle\Entity\Product;
 use Doctrine\ORM\EntityManager;
 use pimax\Messages\Message;
 use pimax\Messages\MessageButton;
+use pimax\Messages\QuickReply;
+use pimax\Messages\QuickReplyButton;
 use pimax\Messages\StructuredMessage;
 use JMS\DiExtraBundle\Annotation as DI;
 
 /**
- * @DI\Service("bot.products_message")
+ * @DI\Service("bot.remove_product_message")
  */
-class ProductMessage extends BotMessage
+class RemoveProductMessage extends BotMessage
 {
-    const THE_OPENING_SENTENCE = 'Our Products:';
-    const EMPTY_SENTENCE = 'There\'s no products right now!';
+    const THE_OPENING_SENTENCE = 'Product has been removed from the cart';
+    const NOT_FOUND_ITEM = 'Product not found in your cart';
 
     /**
      * @var EntityManager
@@ -43,31 +45,33 @@ class ProductMessage extends BotMessage
      */
     protected function getMessageTemplate(CustomerMessage $customerMessage)
     {
-        $products = $this->em->getRepository('AppBundle:Product')->findAll();
-        $structuredProducts = [];
-        /** @var Product $product */
-        foreach ($products as $product) {
-            $structuredProducts[] = $product->getTemplate($customerMessage->getSender());
-        }
-        if(!empty($structuredProducts))
-        {
-            return [
-                new Message($customerMessage->getSender()->getFacebookRecipientId(),
-                    self::THE_OPENING_SENTENCE
-                ),
-                new StructuredMessage($customerMessage->getSender()->getFacebookRecipientId(),
-                    StructuredMessage::TYPE_GENERIC,
-                    [
-                        'elements' => $structuredProducts
-                    ]
-                )
-            ];
-        }
-
+        $removedItem = $this->removeProductFromUserCart($customerMessage);
+        $reply = ($removedItem) ? self::THE_OPENING_SENTENCE : self::NOT_FOUND_ITEM;
         return [
-            new Message($customerMessage->getSender()->getFacebookRecipientId(),
-            self::EMPTY_SENTENCE
+            new QuickReply($customerMessage->getSender()->getFacebookRecipientId(),
+                $reply,
+                [
+                    new QuickReplyButton(QuickReplyButton::TYPE_TEXT,  BotMessageType::SHOW_PRODUCTS_TEXT, BotMessageType::SHOW_PRODUCTS_PAYLOAD),
+                    new QuickReplyButton(QuickReplyButton::TYPE_TEXT, BotMessageType::SHOW_CART_TEXT, BotMessageType::SHOW_CART_PAYLOAD),
+                ]
             )
         ];
+    }
+
+    /**
+     * @param $customerMessage
+     * @throws \Doctrine\ORM\OptimisticLockException
+     */
+    private function removeProductFromUserCart($customerMessage)
+    {
+        $cartItem = $this->em->getRepository('AppBundle:Cart')->findOneBy([
+            'id' => explode("|",$customerMessage->getMessage())[1]
+        ]);
+        if($cardItem){
+            $this->em->remove($cartItem);
+            $this->em->flush($cartItem);
+            return true;
+        }
+        return false;
     }
 }
